@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:video_player/video_player.dart';
 
 const orange = Color(0xffff792d);
 const ownerUid = '0tIk0W8QrJZLYwORAwGyrZHhndC2';
@@ -44,22 +45,65 @@ class Splash extends StatefulWidget {
   @override State<Splash> createState() => _SplashState();
 }
 class _SplashState extends State<Splash> {
-  @override void initState() {
+  VideoPlayerController? _video;
+  bool _finished = false;
+
+  @override
+  void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const Directionality(textDirection: TextDirection.rtl, child: Catalog())));
-    });
+    _startIntro();
   }
-  @override Widget build(BuildContext context) => const Scaffold(
-    body: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-      Icon(Icons.sports_esports, size: 90, color: orange),
-      SizedBox(height: 20),
-      Text('OMAR GAMING', style: TextStyle(color: orange, fontSize: 28, fontWeight: FontWeight.bold)),
-      SizedBox(height: 12),
-      Text('By : omar ayad'),
-    ])),
+
+  Future<void> _startIntro() async {
+    try {
+      final controller = VideoPlayerController.asset('assets/intro.mp4');
+      _video = controller;
+      await controller.initialize();
+      if (!mounted) return;
+      controller.addListener(() {
+        if (!_finished &&
+            controller.value.isInitialized &&
+            controller.value.position >= controller.value.duration &&
+            controller.value.duration > Duration.zero) {
+          _goToCatalog();
+        }
+      });
+      setState(() {});
+      await controller.play();
+    } catch (_) {
+      _goToCatalog();
+    }
+  }
+
+  void _goToCatalog() {
+    if (_finished || !mounted) return;
+    _finished = true;
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+      builder: (_) => const Directionality(
+        textDirection: TextDirection.rtl, child: Catalog()),
+    ));
+  }
+
+  @override
+  void dispose() {
+    _video?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: Colors.black,
+    body: Center(
+      child: _video != null && _video!.value.isInitialized
+        ? AspectRatio(
+            aspectRatio: _video!.value.aspectRatio,
+            child: VideoPlayer(_video!),
+          )
+        : const SizedBox.shrink(),
+    ),
   );
 }
+
 class Catalog extends StatefulWidget {
   const Catalog({super.key});
   @override State<Catalog> createState() => _CatalogState();
