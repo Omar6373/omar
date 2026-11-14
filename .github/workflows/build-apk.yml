@@ -15,13 +15,15 @@ jobs:
         run: flutter create --platforms android --org com.omarayad .
       - name: Install dependencies
         run: flutter pub get
+      - name: Read Firebase Android config
+        run: |
+          echo "FIREBASE_API_KEY=$(jq -r '.client[0].api_key[0].current_key' firebase/google-services.json)" >> "$GITHUB_ENV"
+          echo "FIREBASE_APP_ID=$(jq -r '.client[0].client_info.mobilesdk_app_id' firebase/google-services.json)" >> "$GITHUB_ENV"
+          echo "FIREBASE_SENDER_ID=$(jq -r '.project_info.project_number' firebase/google-services.json)" >> "$GITHUB_ENV"
+          echo "FIREBASE_PROJECT_ID=$(jq -r '.project_info.project_id' firebase/google-services.json)" >> "$GITHUB_ENV"
+          echo "FIREBASE_STORAGE_BUCKET=$(jq -r '.project_info.storage_bucket' firebase/google-services.json)" >> "$GITHUB_ENV"
       - name: Build release APK
         env:
-          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
-          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
-          FIREBASE_SENDER_ID: ${{ secrets.FIREBASE_SENDER_ID }}
-          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
           OWNER_UID: ${{ secrets.OWNER_UID }}
         run: |
           flutter build apk --release \
