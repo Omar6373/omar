@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "67019081745",
+    "project_id": "omar-gaming-dfeef",
+    "storage_bucket": "omar-gaming-dfeef.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:67019081745:android:41a6df8f1b62a4450549b0",
+        "android_client_info": {
+          "package_name": "com.omarayad.omar_gaming"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-vMyULoJC3Xn-YvE5RuGXNPfK0hMSiac"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
