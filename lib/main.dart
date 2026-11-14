@@ -8,7 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 const orange = Color(0xffff792d);
 const ownerUid = String.fromEnvironment('OWNER_UID');
-const ownerEmail = 'omarayad272@gmail.com';
+const ownerEmail = 'omarayad83@gmail.com';
 const apiKey = String.fromEnvironment('FIREBASE_API_KEY');
 const appId = String.fromEnvironment('FIREBASE_APP_ID');
 const senderId = String.fromEnvironment('FIREBASE_SENDER_ID');
