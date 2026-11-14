@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -96,7 +98,7 @@ class _CatalogState extends State<Catalog> {
                 return Card(clipBehavior: Clip.antiAlias, child: InkWell(
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => Directionality(textDirection: TextDirection.rtl, child: Details(data: d)))),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                    Expanded(child: cover(d['imageUrl']?.toString() ?? '')),
+                    Expanded(child: cover(d['imageUrl']?.toString() ?? '', d['imageBase64']?.toString())),
                     Padding(padding: const EdgeInsets.all(10), child: Text(d['title']?.toString() ?? '', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold))),
                     const Padding(padding: EdgeInsets.fromLTRB(10, 0, 10, 10), child: Text('عرض التفاصيل', style: TextStyle(color: orange))),
                   ]),
@@ -108,16 +110,27 @@ class _CatalogState extends State<Catalog> {
     ]),
   );
 }
-Widget cover(String url) => url.isEmpty
-  ? const Center(child: Icon(Icons.sports_esports, color: orange, size: 55))
-  : Image.network(url, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image)));
+Widget cover(String url, [String? imageBase64]) {
+  if (imageBase64 != null && imageBase64.isNotEmpty) {
+    try {
+      return Image.memory(base64Decode(imageBase64), fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image)));
+    } catch (_) {
+      return const Center(child: Icon(Icons.broken_image));
+    }
+  }
+  return url.isEmpty
+    ? const Center(child: Icon(Icons.sports_esports, color: orange, size: 55))
+    : Image.network(url, fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image)));
+}
 class Details extends StatelessWidget {
   final Map<String, dynamic> data;
   const Details({super.key, required this.data});
   @override Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(data['title']?.toString() ?? 'التفاصيل')),
     body: ListView(padding: const EdgeInsets.all(18), children: [
-      SizedBox(height: 230, child: cover(data['imageUrl']?.toString() ?? '')),
+      SizedBox(height: 230, child: cover(data['imageUrl']?.toString() ?? '', data['imageBase64']?.toString())),
       const SizedBox(height: 20),
       Text(data['title']?.toString() ?? '', style: Theme.of(context).textTheme.headlineMedium),
       const SizedBox(height: 12),
@@ -170,16 +183,19 @@ class _AdminState extends State<Admin> {
     }
     setState(() => busy = true);
     try {
-      String imageUrl = '';
+      String imageBase64 = '';
       if (picked != null) {
         final bytes = await picked!.readAsBytes();
-        final ref = FirebaseStorage.instance.ref('covers/${DateTime.now().millisecondsSinceEpoch}.jpg');
-        await ref.putData(bytes, SettableMetadata(contentType: 'image/jpeg'));
-        imageUrl = await ref.getDownloadURL();
+        final decoded = img.decodeImage(bytes);
+        if (decoded == null) throw Exception('تعذر قراءة صورة الغلاف');
+        final resized = img.copyResize(decoded, width: 400);
+        final jpeg = Uint8List.fromList(img.encodeJpg(resized, quality: 60));
+        if (jpeg.length > 240000) throw Exception('حجم الغلاف كبير، اختر صورة أصغر');
+        imageBase64 = base64Encode(jpeg);
       }
       await FirebaseFirestore.instance.collection('posts').add({
         'title': title.text.trim(), 'description': description.text.trim(),
-        'url': url.text.trim(), 'type': type, 'imageUrl': imageUrl,
+        'url': url.text.trim(), 'type': type, 'imageBase64': imageBase64,
         'createdAt': FieldValue.serverTimestamp(),
       });
       title.clear(); description.clear(); url.clear();
