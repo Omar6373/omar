@@ -13,6 +13,17 @@ jobs:
           channel: stable
       - name: Generate Android project
         run: flutter create --platforms android --org com.omarayad .
+      - name: Enable Android internet access
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('android/app/src/main/AndroidManifest.xml')
+          s = p.read_text()
+          permission = '<uses-permission android:name="android.permission.INTERNET"/>'
+          if permission not in s:
+              s = s.replace('<application', permission + '\n    <application', 1)
+          p.write_text(s)
+          PY
       - name: Install dependencies
         run: flutter pub get
       - name: Read Firebase Android config
