@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 const orange = Color(0xffff792d);
-const ownerUid = String.fromEnvironment('OWNER_UID');
+const ownerUid = '0tIk0W8QrJZLYwORAwGyrZHhndC2';
 const ownerEmail = 'omarayad83@gmail.com';
 const apiKey = String.fromEnvironment('FIREBASE_API_KEY');
 const appId = String.fromEnvironment('FIREBASE_APP_ID');
