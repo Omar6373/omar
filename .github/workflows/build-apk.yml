@@ -23,7 +23,6 @@ jobs:
           echo "FIREBASE_PROJECT_ID=$(jq -r '.project_info.project_id' firebase/google-services.json)" >> "$GITHUB_ENV"
           echo "FIREBASE_STORAGE_BUCKET=$(jq -r '.project_info.storage_bucket' firebase/google-services.json)" >> "$GITHUB_ENV"
       - name: Build release APK
-        env:
         run: |
           flutter build apk --release \
             --dart-define=FIREBASE_API_KEY="$FIREBASE_API_KEY" \
