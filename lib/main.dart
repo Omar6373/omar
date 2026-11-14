@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 const orange = Color(0xffff792d);
 const ownerUid = String.fromEnvironment('OWNER_UID');
+const ownerEmail = 'omarayad272@gmail.com';
 const apiKey = String.fromEnvironment('FIREBASE_API_KEY');
 const appId = String.fromEnvironment('FIREBASE_APP_ID');
 const senderId = String.fromEnvironment('FIREBASE_SENDER_ID');
@@ -139,20 +140,20 @@ class Admin extends StatefulWidget {
   @override State<Admin> createState() => _AdminState();
 }
 class _AdminState extends State<Admin> {
-  final email = TextEditingController(), password = TextEditingController();
+  final password = TextEditingController();
   final title = TextEditingController(), description = TextEditingController(), url = TextEditingController();
   String type = 'game';
   XFile? picked;
   bool busy = false;
   @override void dispose() {
-    for (final c in [email, password, title, description, url]) { c.dispose(); }
+    for (final c in [password, title, description, url]) { c.dispose(); }
     super.dispose();
   }
   Future<void> login() async {
     setState(() => busy = true);
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(email: email.text.trim(), password: password.text);
-      if (FirebaseAuth.instance.currentUser?.uid != ownerUid) {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(email: ownerEmail, password: password.text);
+      if (FirebaseAuth.instance.currentUser?.uid != ownerUid || FirebaseAuth.instance.currentUser?.email?.toLowerCase() != ownerEmail) {
         await FirebaseAuth.instance.signOut();
         throw Exception('هذا الحساب غير مخول بالإدارة');
       }
@@ -189,12 +190,12 @@ class _AdminState extends State<Admin> {
   }
   @override Widget build(BuildContext context) {
     if (Firebase.apps.isEmpty) return const Scaffold(body: Center(child: Text('يجب إعداد Firebase أولاً')));
-    final authorized = FirebaseAuth.instance.currentUser?.uid == ownerUid && ownerUid.isNotEmpty;
+    final authorized = FirebaseAuth.instance.currentUser?.uid == ownerUid && FirebaseAuth.instance.currentUser?.email?.toLowerCase() == ownerEmail && ownerUid.isNotEmpty;
     return Scaffold(
       appBar: AppBar(title: const Text('لوحة الإدارة')),
       body: ListView(padding: const EdgeInsets.all(18), children: [
         if (!authorized) ...[
-          TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'البريد الإلكتروني')),
+          const ListTile(title: Text('حساب المالك'), subtitle: Text(ownerEmail)),
           TextField(controller: password, obscureText: true, decoration: const InputDecoration(labelText: 'كلمة المرور')),
           const SizedBox(height: 12),
           FilledButton(onPressed: busy ? null : login, child: const Text('دخول المالك')),
