@@ -1,4 +1,4 @@
-name: Build OMAR GAMING APK
+name: Build OMAR STORE APK
 on:
   workflow_dispatch:
   push:
@@ -28,6 +28,7 @@ jobs:
           permission = '<uses-permission android:name="android.permission.INTERNET"/>'
           if permission not in s:
               s = s.replace('<application', permission + '\n    <application', 1)
+          s = s.replace('<application', '<application android:label="OMAR STORE"', 1)
           p.write_text(s)
           PY
       - name: Install dependencies
@@ -59,8 +60,8 @@ jobs:
           if ! gh release view v1.0.0 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release create v1.0.0 OMAR-GAMING.apk \
               --repo "$GITHUB_REPOSITORY" \
-              --title "OMAR GAMING v1.0.0" \
-              --notes "تطبيق OMAR GAMING للأندرويد مع فيديو الافتتاح. تنزيل مباشر APK."
+              --title "OMAR STORE v1.0.0" \
+              --notes "تطبيق OMAR STORE للأندرويد مع فيديو الافتتاح. تنزيل مباشر APK."
           else
             gh release upload v1.0.0 OMAR-GAMING.apk --clobber --repo "$GITHUB_REPOSITORY"
           fi
