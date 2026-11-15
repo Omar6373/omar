@@ -32,7 +32,7 @@ class App extends StatelessWidget {
   const App({super.key});
   @override Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
-    title: 'OMAR GAMING',
+    title: 'OMAR STORE',
     theme: ThemeData.dark(useMaterial3: true).copyWith(
       scaffoldBackgroundColor: Colors.black,
       colorScheme: const ColorScheme.dark(primary: orange, surface: Color(0xff1a1a1a)),
@@ -112,7 +112,7 @@ class _CatalogState extends State<Catalog> {
   String type = 'game', query = '';
   @override Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(backgroundColor: Colors.black,
-      title: const Text('OMAR GAMING', style: TextStyle(color: orange, fontWeight: FontWeight.bold)),
+      title: const Text('OMAR STORE', style: TextStyle(color: orange, fontWeight: FontWeight.bold)),
       actions: [IconButton(icon: const Icon(Icons.admin_panel_settings_outlined), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const Admin())))],
     ),
     body: Column(children: [
