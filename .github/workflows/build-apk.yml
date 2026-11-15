@@ -28,7 +28,8 @@ jobs:
           permission = '<uses-permission android:name="android.permission.INTERNET"/>'
           if permission not in s:
               s = s.replace('<application', permission + '\n    <application', 1)
-          s = s.replace('<application', '<application android:label="OMAR STORE"', 1)
+          import re
+          s = re.sub(r'android:label="[^"]*"', 'android:label="OMAR STORE"', s, count=1)
           p.write_text(s)
           PY
       - name: Install dependencies
