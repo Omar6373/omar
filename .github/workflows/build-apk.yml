@@ -83,13 +83,22 @@ jobs:
           echo "FIREBASE_PROJECT_ID=$(jq -r '.project_info.project_id' firebase/google-services.json)" >> "$GITHUB_ENV"
           echo "FIREBASE_STORAGE_BUCKET=$(jq -r '.project_info.storage_bucket' firebase/google-services.json)" >> "$GITHUB_ENV"
       - name: Build release APK
+        shell: bash
         run: |
+          set -o pipefail
           flutter build apk --release \
             --dart-define=FIREBASE_API_KEY="$FIREBASE_API_KEY" \
             --dart-define=FIREBASE_APP_ID="$FIREBASE_APP_ID" \
             --dart-define=FIREBASE_SENDER_ID="$FIREBASE_SENDER_ID" \
             --dart-define=FIREBASE_PROJECT_ID="$FIREBASE_PROJECT_ID" \
-            --dart-define=FIREBASE_STORAGE_BUCKET="$FIREBASE_STORAGE_BUCKET"
+            --dart-define=FIREBASE_STORAGE_BUCKET="$FIREBASE_STORAGE_BUCKET" 2>&1 | tee flutter-build.log
+      - name: Save build diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: OMAR-STORE-build-error
+          path: flutter-build.log
+          if-no-files-found: warn
       - uses: actions/upload-artifact@v4
         with:
           name: OMAR-GAMING-APK
