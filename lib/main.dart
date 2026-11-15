@@ -149,7 +149,6 @@ class _WelcomeState extends State<Welcome> {
             Icon(Icons.android, color: orange, size: 100),
           ])),
         ),
-      ),
       Positioned(
         left: 0, right: 0, bottom: 0, height: MediaQuery.sizeOf(context).height * .29,
         child: Semantics(
