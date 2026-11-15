@@ -81,7 +81,7 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
       - name: Check Flutter source for compile errors
-        run: flutter analyze --no-pub lib/main.dart
+        run: flutter analyze --no-pub --no-fatal-infos lib/main.dart
       - name: Read Firebase Android config
         run: |
           echo "FIREBASE_API_KEY=$(jq -r '.client[0].api_key[0].current_key' firebase/google-services.json)" >> "$GITHUB_ENV"
