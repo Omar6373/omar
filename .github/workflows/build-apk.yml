@@ -38,7 +38,7 @@ jobs:
           PY
       - name: Generate Android project
         run: flutter create --platforms android --org com.omarayad .
-      - name: Enable Android internet access
+      - name: Configure Android permissions and test AdMob app ID
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -49,6 +49,9 @@ jobs:
               s = s.replace('<application', permission + '\n    <application', 1)
           import re
           s = re.sub(r'android:label="[^"]*"', 'android:label="OMAR STORE"', s, count=1)
+          admob = '<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3940256099942544~3347511713"/>'
+          if 'com.google.android.gms.ads.APPLICATION_ID' not in s:
+              s = s.replace('</application>', '    ' + admob + '\n    </application>', 1)
           p.write_text(s)
           PY
       - name: Install dependencies
