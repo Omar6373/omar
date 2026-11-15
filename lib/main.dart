@@ -131,8 +131,8 @@ class _WelcomeState extends State<Welcome> {
   @override Widget build(BuildContext context) => Scaffold(
     backgroundColor: Colors.black,
     body: Stack(fit: StackFit.expand, children: [
-      Image.network(
-        'https://raw.githubusercontent.com/Omar6373/omar/main/assets/welcome.jpg',
+      Image.asset(
+        'assets/welcome.png',
         fit: BoxFit.fill,
         errorBuilder: (_, __, ___) => Container(
           decoration: const BoxDecoration(gradient: LinearGradient(
