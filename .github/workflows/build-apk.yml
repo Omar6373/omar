@@ -54,6 +54,25 @@ jobs:
               s = s.replace('</application>', '    ' + admob + '\n    </application>', 1)
           p.write_text(s)
           PY
+      - name: Configure Android minimum SDK for Google Mobile Ads
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          for filename in ('android/app/build.gradle.kts', 'android/app/build.gradle'):
+              p = Path(filename)
+              if not p.exists():
+                  continue
+              content = p.read_text()
+              if filename.endswith('.kts'):
+                  content = re.sub(r'minSdk\s*=\s*flutter\.minSdkVersion', 'minSdk = 23', content)
+              else:
+                  content = re.sub(r'minSdkVersion\s+flutter\.minSdkVersion', 'minSdkVersion 23', content)
+              p.write_text(content)
+              print(f'Configured minimum SDK 23 in {filename}')
+          PY
+      - name: Diagnose Flutter environment
+        run: flutter doctor -v
       - name: Install dependencies
         run: flutter pub get
       - name: Read Firebase Android config
