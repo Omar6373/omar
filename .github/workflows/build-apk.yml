@@ -17,6 +17,24 @@ jobs:
         run: |
           mkdir -p assets
           cp OMAR_GAMING_no_capcut.mp4 assets/intro.mp4
+      - name: Generate welcome entry chime
+        run: |
+          mkdir -p assets/sounds
+          python3 - <<'PY'
+          import math, wave, struct
+          rate=22050
+          duration=.48
+          with wave.open('assets/sounds/enter.wav','wb') as out:
+              out.setnchannels(1);out.setsampwidth(2);out.setframerate(rate)
+              frames=[]
+              for i in range(int(rate*duration)):
+                  t=i/rate
+                  env=(1-math.exp(-35*t))*math.exp(-6*t)
+                  freq=660 if t<.15 else (880 if t<.32 else 1100)
+                  value=int(11000*env*(math.sin(2*math.pi*freq*t)+.20*math.sin(4*math.pi*freq*t)))
+                  frames.append(struct.pack('<h',max(-32768,min(32767,value))))
+              out.writeframes(b''.join(frames))
+          PY
       - name: Generate Android project
         run: flutter create --platforms android --org com.omarayad .
       - name: Enable Android internet access
