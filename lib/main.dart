@@ -25,10 +25,23 @@ class StoreAds {
   DateTime? _lastShown;
   bool _loading = false;
   bool _showing = false;
+  bool _ready = false;
+
+  Future<void> initializeSafely() async {
+    try {
+      await MobileAds.instance.initialize().timeout(const Duration(seconds: 8));
+      _ready = true;
+      preload();
+    } catch (_) {
+      // AdMob must never prevent the store from starting.
+      _ready = false;
+    }
+  }
 
   void preload() {
-    if (_loading || _loaded != null || _showing) return;
+    if (!_ready || _loading || _loaded != null || _showing) return;
     _loading = true;
+    try {
     InterstitialAd.load(
       adUnitId: testInterstitialId,
       request: const AdRequest(),
@@ -42,6 +55,7 @@ class StoreAds {
         },
       ),
     );
+    } catch (_) { _loading = false; }
   }
 
   // Always continue to the requested page/download, even when ads fail.
@@ -94,9 +108,11 @@ Future<void> main() async {
       projectId: projectId, storageBucket: bucket,
     ));
   }
-  await MobileAds.instance.initialize();
-  StoreAds.instance.preload();
   runApp(const App());
+  // Initialize ads only after the UI is running, without blocking startup.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    StoreAds.instance.initializeSafely();
+  });
 }
 class App extends StatelessWidget {
   const App({super.key});
