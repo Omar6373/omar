@@ -9,8 +9,75 @@ import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 const orange = Color(0xffff792d);
+
+// Google's official Android TEST interstitial. Never use production IDs for testing.
+// Production App ID: ca-app-pub-5686236495411982~1922016289
+// Production interstitial: ca-app-pub-5686236495411982/8775199249
+class StoreAds {
+  StoreAds._();
+  static final StoreAds instance = StoreAds._();
+  static const testInterstitialId = 'ca-app-pub-3940256099942544/1033173712';
+  static const cooldown = Duration(seconds: 90);
+  InterstitialAd? _loaded;
+  DateTime? _lastShown;
+  bool _loading = false;
+  bool _showing = false;
+
+  void preload() {
+    if (_loading || _loaded != null || _showing) return;
+    _loading = true;
+    InterstitialAd.load(
+      adUnitId: testInterstitialId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          _loading = false;
+          _loaded = ad;
+        },
+        onAdFailedToLoad: (error) {
+          _loading = false;
+        },
+      ),
+    );
+  }
+
+  // Always continue to the requested page/download, even when ads fail.
+  void showThen(VoidCallback continueAction) {
+    final now = DateTime.now();
+    if (_showing || _loaded == null ||
+        (_lastShown != null && now.difference(_lastShown!) < cooldown)) {
+      continueAction();
+      preload();
+      return;
+    }
+    final ad = _loaded!;
+    _loaded = null;
+    _showing = true;
+    bool continued = false;
+    void finish() {
+      if (continued) return;
+      continued = true;
+      _showing = false;
+      ad.dispose();
+      continueAction();
+      preload();
+    }
+    ad.fullScreenContentCallback = FullScreenContentCallback(
+      onAdShowedFullScreenContent: (_) => _lastShown = DateTime.now(),
+      onAdDismissedFullScreenContent: (_) => finish(),
+      onAdFailedToShowFullScreenContent: (_, __) => finish(),
+    );
+    try {
+      ad.show();
+    } catch (_) {
+      finish();
+    }
+  }
+}
+
 const ownerUid = '0tIk0W8QrJZLYwORAwGyrZHhndC2';
 const ownerEmail = 'omarayad83@gmail.com';
 const apiKey = String.fromEnvironment('FIREBASE_API_KEY');
@@ -27,6 +94,8 @@ Future<void> main() async {
       projectId: projectId, storageBucket: bucket,
     ));
   }
+  await MobileAds.instance.initialize();
+  StoreAds.instance.preload();
   runApp(const App());
 }
 class App extends StatelessWidget {
@@ -199,7 +268,7 @@ class _CatalogState extends State<Catalog> {
               itemBuilder: (context, index) {
                 final d = posts[index].data();
                 return Card(clipBehavior: Clip.antiAlias, child: InkWell(
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => Directionality(textDirection: TextDirection.rtl, child: Details(data: d)))),
+                  onTap: () => StoreAds.instance.showThen(() { if (context.mounted) Navigator.push(context, MaterialPageRoute(builder: (_) => Directionality(textDirection: TextDirection.rtl, child: Details(data: d)))); }),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                     Expanded(child: cover(d['imageUrl']?.toString() ?? '', d['imageBase64']?.toString())),
                     Padding(padding: const EdgeInsets.all(10), child: Text(d['title']?.toString() ?? '', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold))),
@@ -239,14 +308,18 @@ class Details extends StatelessWidget {
       const SizedBox(height: 12),
       Text(data['description']?.toString() ?? ''),
       const SizedBox(height: 22),
-      FilledButton.icon(icon: const Icon(Icons.download), label: const Text('تحميل'), onPressed: () async {
+      FilledButton.icon(icon: const Icon(Icons.download), label: const Text('تحميل'), onPressed: () {
         final raw = data['url']?.toString() ?? '';
         final uri = Uri.tryParse(raw);
-        if (uri != null && (uri.scheme == 'https' || uri.scheme == 'http')) {
+        if (uri == null || (uri.scheme != 'https' && uri.scheme != 'http')) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('رابط التحميل غير صالح')));
+          return;
+        }
+        StoreAds.instance.showThen(() async {
           if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تعذر فتح رابط التحميل')));
           }
-        }
+        });
       }),
     ]),
   );
