@@ -8,6 +8,7 @@ import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 const orange = Color(0xffff792d);
 const ownerUid = '0tIk0W8QrJZLYwORAwGyrZHhndC2';
@@ -80,7 +81,7 @@ class _SplashState extends State<Splash> {
     _finished = true;
     Navigator.of(context).pushReplacement(MaterialPageRoute(
       builder: (_) => const Directionality(
-        textDirection: TextDirection.rtl, child: Catalog()),
+        textDirection: TextDirection.rtl, child: Welcome()),
     ));
   }
 
@@ -101,6 +102,65 @@ class _SplashState extends State<Splash> {
           )
         : const SizedBox.shrink(),
     ),
+  );
+}
+
+class Welcome extends StatefulWidget {
+  const Welcome({super.key});
+  @override State<Welcome> createState() => _WelcomeState();
+}
+class _WelcomeState extends State<Welcome> {
+  final AudioPlayer _player = AudioPlayer();
+  bool _entering = false;
+  Future<void> _enter() async {
+    if (_entering) return;
+    setState(() => _entering = true);
+    try {
+      await _player.play(AssetSource('sounds/enter.wav'));
+      await Future<void>.delayed(const Duration(milliseconds: 550));
+    } catch (_) {}
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+      builder: (_) => const Directionality(
+        textDirection: TextDirection.rtl, child: Catalog())));
+  }
+  @override void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+  @override Widget build(BuildContext context) => Scaffold(
+    backgroundColor: Colors.black,
+    body: Stack(fit: StackFit.expand, children: [
+      Image.network(
+        'https://raw.githubusercontent.com/Omar6373/omar/main/assets/welcome.jpg',
+        fit: BoxFit.fill,
+        errorBuilder: (_, __, ___) => Container(
+          decoration: const BoxDecoration(gradient: LinearGradient(
+            begin: Alignment.topCenter, end: Alignment.bottomCenter,
+            colors: [Color(0xff090909), Color(0xff2a1000), Colors.black])),
+          child: const Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Text('OS', style: TextStyle(color: orange, fontSize: 92, fontWeight: FontWeight.w900)),
+            Text('OMAR STORE', style: TextStyle(color: orange, fontSize: 36, fontWeight: FontWeight.bold)),
+            SizedBox(height: 24),
+            Text('برامج مدفوعة + ألعاب مدفوعة', style: TextStyle(color: Colors.white, fontSize: 22)),
+            SizedBox(height: 12),
+            Text('و العديد من المحتويات المميزة', style: TextStyle(color: Colors.white70, fontSize: 18)),
+            SizedBox(height: 90),
+            Icon(Icons.android, color: orange, size: 100),
+          ])),
+        ),
+      ),
+      Positioned(
+        left: 0, right: 0, bottom: 0, height: MediaQuery.sizeOf(context).height * .29,
+        child: Semantics(
+          button: true, label: 'اضغط للدخول',
+          child: Material(color: Colors.transparent, child: InkWell(
+            onTap: _enter,
+            child: const SizedBox.expand(),
+          )),
+        ),
+      ),
+    ]),
   );
 }
 
