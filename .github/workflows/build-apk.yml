@@ -17,6 +17,7 @@ jobs:
         run: |
           mkdir -p assets
           cp OMAR_GAMING_no_capcut.mp4 assets/intro.mp4
+          cp file_00000000f0bc82108c6710992070709a.png assets/welcome.png
       - name: Generate welcome entry chime
         run: |
           mkdir -p assets/sounds
